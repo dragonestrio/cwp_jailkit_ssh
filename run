@@ -1,0 +1,115 @@
+#!/bin/bash
+# Just For Control Web Panel / CentOS Web Panel (CWP)
+# Worked on CWP v 0.9.8.1170
+# by Satrio | github.com/dragonestrio
+
+# --- start confirmation ---
+echo 'Did you activate the jailkit on user that you want ?'
+read -p '[yes / no] :  ' start_1
+
+if [[ $start_1 == "yes" || $start_1 == "y" ]] 
+then
+	echo '--------'
+else
+	echo 'you have to activate the jailkit first on that user you want to'
+	exit
+fi
+# --- ./start confirmation ---
+
+# --- main ---
+user=()
+pass=()
+insert_user() {
+	echo 'Who the name of the user do you want ?'
+	read users
+	user+=($users)
+	echo 'What the password ?'
+	read passa
+	pass+=($passa)
+	confirmation_user
+}
+
+confirmation_user() {
+	echo '--------'
+	read -p 'Any onther user again ? [yes / no]  ' name_conf
+	echo '--------'
+	if [[ $name_conf == "yes" || $name_conf == "y" ]]
+	then
+		insert_user
+	fi
+}
+
+process_create_ssh() {
+	clear
+	echo 'creating ssh acoount...'
+	user_order=0
+	for i in ${user[@]}
+	do
+		pass_now=${pass[$user_order]}
+		useradd -m -d /home/jail/$i/./home/$i -s /bin/bash -U $i-ssh
+		chpasswd <<<"$i-ssh:$pass_now"
+		echo "Success creating on account $i at order $user_order"
+		((user_order++))
+	done
+}
+
+process_modif_ssh() {
+        clear
+        echo 'modifying ssh acoount...'
+        user_order=0
+        for i in ${user[@]}
+        do
+                pass_now=${pass[$user_order]}
+                usermod -d /home/jail/$i/./home/$i -s /bin/bash -U $i-ssh
+		chpasswd <<<"$i-ssh:$pass_now"
+                echo "Success modifying on account $i at order $user_order"
+                ((user_order++))
+        done
+}
+
+process_del_ssh() {
+	clear
+	echo 'Enter the name of the account'
+	read name
+	userdel $name-ssh
+}
+
+menu_system() {
+	clear
+	menu=("Create_New_SSH_Account" "Modifying_SSH_Account" "Delete_SSH_Account" "Quit")
+	select menus in ${menu[@]}
+	do
+		case $menus in 
+			${menu[0]})
+			insert_user
+			process_create_ssh
+			exit
+			;;
+
+			${menu[1]})
+			insert_user
+			process_modif_ssh
+			exit
+			;;
+
+			${menu[2]})
+			process_del_ssh
+			exit
+			;;
+
+			"Quit")
+			echo 'Thankyou for using this app!'
+			exit
+			;;
+
+#			*)
+#			echo 'No one you have selected'
+#			exit
+#			;;
+
+		esac
+	done
+} 
+
+menu_system
+# --- ./main ---
